@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 
 
-#base_dir = Path(__file__).resolve().parent
+base_dir = Path(__file__).resolve().parent
 #model_path = base_dir/"best.pt"
 #model = YOLO(str(model_path))
 
@@ -19,13 +19,30 @@ if not cap.isOpened():
 
 while True:
     ret,frame = cap.read()
-    if not ret == True:
+    if not ret:
         break
+    
+    cv2.imshow("webcam", frame)
+    key = cv2.waitKey(1) & 0xFF
+
+    if key ==ord(' '):
+        capture_dir = Path(f"{base_dir}/captured.jpg")
+        if capture_dir.exists():
+            capture_dir.unlink()
+
+        cv2.imwrite(str(capture_dir),frame)
+
+        #plt.figure(figsize=(10,10))
+        #plt.imshow(capture_dir)
+        #plt.axis("off")
+        #plt.show()
 
     #img = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
-    cv2.imshow("webcam",frame)
+    #cv2.imshow("webcam",frame)
 
-    if cv2.waitKey(1) & 0xFF == ord("q"):
+    
+
+    if key == ord("q"):
         break
 
 cap.release()
