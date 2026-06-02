@@ -46,7 +46,7 @@ if not os.path.exists(test_imgs_path):
     print("predict error")
     exit()
 
-results = model.predict(test_imgs_path,save=True,project="test",name="")
+results = model.predict(test_imgs_path,save=True,project=str(base_dir),name="latest_testlog",exist_ok=True)
 #print(len(results))
 test_result = results[0]
 testimg = cv2.cvtColor(test_result.plot(),cv2.COLOR_BGR2RGB)
