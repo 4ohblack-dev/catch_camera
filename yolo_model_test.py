@@ -4,53 +4,42 @@ import os
 from ultralytics import YOLO
 from pathlib import Path
 import numpy as np
+import time
 
+def main():
+    base_dir = Path(__file__).resolve().parent
+    model_path = base_dir/"best.pt"
+    model = YOLO(str(model_path))
 
-base_dir = Path(__file__).resolve().parent
-model_path = base_dir/"best.pt"
-model = YOLO(str(model_path))
+    cap = cv2.VideoCapture(1,cv2.CAP_DSHOW)
+    cap.set(cv2.CAP_PROP_FPS,30)
 
-cap = cv2.VideoCapture(1,cv2.CAP_DSHOW)
-cap.set(cv2.CAP_PROP_FPS,30)
+    prev_time = 0
 
-if not cap.isOpened():
-    print("cannot find cam")
-    exit()
+    if not cap.isOpened():
+        print("cannot find cam")
+        exit()
 
-while True:
-    ret,frame = cap.read()
-    if not ret:
-        break
-    
-    cv2.imshow("webcam", frame)
-    key = cv2.waitKey(1) & 0xFF
-    capture_dir = Path(f"{base_dir}/captured.jpg")  
-    if key ==ord(' '):
+    while True:
+
+        ret,frame = cap.read()
+        if not ret:
+            break
         
-        if capture_dir.exists():
-            capture_dir.unlink()
+        
+        results = model.predict(frame,project=str(base_dir),name="latest_testlog",exist_ok=True,stream=True,verbose=False,conf=0.6)
+        results_plot = frame
+        for r in results:
+            results_plot = r.plot()
 
-        cv2.imwrite(str(capture_dir),frame)
+        cv2.imshow("webcam predicted", results_plot)
+        key = cv2.waitKey(1) & 0xFF
+        
+        if key == ord("q"):
+            break
 
-        break
+    cap.release()
+    cv2.destroyAllWindows()
 
-    if key == ord("q"):
-        break
-
-cap.release()
-cv2.destroyAllWindows
-
-test_imgs_path = capture_dir
-
-if not os.path.exists(test_imgs_path):
-    print("predict error")
-    exit()
-
-results = model.predict(test_imgs_path,save=True,project=str(base_dir),name="latest_testlog",exist_ok=True)
-#print(len(results))
-test_result = results[0]
-testimg = cv2.cvtColor(test_result.plot(),cv2.COLOR_BGR2RGB)
-plt.figure(figsize=(20,20))
-plt.imshow(testimg)
-plt.axis("off")
-plt.show()
+if __name__ == "__main__":
+    main()
