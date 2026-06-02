@@ -7,8 +7,8 @@ import numpy as np
 
 
 base_dir = Path(__file__).resolve().parent
-#model_path = base_dir/"best.pt"
-#model = YOLO(str(model_path))
+model_path = base_dir/"best.pt"
+model = YOLO(str(model_path))
 
 cap = cv2.VideoCapture(1,cv2.CAP_DSHOW)
 cap.set(cv2.CAP_PROP_FPS,30)
@@ -24,23 +24,15 @@ while True:
     
     cv2.imshow("webcam", frame)
     key = cv2.waitKey(1) & 0xFF
-
+    capture_dir = Path(f"{base_dir}/captured.jpg")  
     if key ==ord(' '):
-        capture_dir = Path(f"{base_dir}/captured.jpg")
+        
         if capture_dir.exists():
             capture_dir.unlink()
 
         cv2.imwrite(str(capture_dir),frame)
 
-        #plt.figure(figsize=(10,10))
-        #plt.imshow(capture_dir)
-        #plt.axis("off")
-        #plt.show()
-
-    #img = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
-    #cv2.imshow("webcam",frame)
-
-    
+        break
 
     if key == ord("q"):
         break
@@ -48,16 +40,17 @@ while True:
 cap.release()
 cv2.destroyAllWindows
 
-#test_imgs_path = base_dir/"test_img"
-#
-#if not os.path.exists(test_imgs_path):
-#    print("error")
-#
-#results = model.predict(test_imgs_path,save=True,project="test",name="")
+test_imgs_path = capture_dir
+
+if not os.path.exists(test_imgs_path):
+    print("predict error")
+    exit()
+
+results = model.predict(test_imgs_path,save=True,project="test",name="")
 #print(len(results))
-#test_result = results[3]
-#testimg = cv2.cvtColor(test_result.plot(),cv2.COLOR_BGR2RGB)
-#plt.figure(figsize=(20,20))
-#plt.imshow(testimg)
-#plt.axis("off")
-#plt.show()
+test_result = results[0]
+testimg = cv2.cvtColor(test_result.plot(),cv2.COLOR_BGR2RGB)
+plt.figure(figsize=(20,20))
+plt.imshow(testimg)
+plt.axis("off")
+plt.show()
