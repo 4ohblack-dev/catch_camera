@@ -28,9 +28,7 @@ def main():
         
         
         results = model.predict(frame,project=str(base_dir),name="latest_testlog",exist_ok=True,stream=True,verbose=False,conf=0.6)
-        results_plot = frame
-        for r in results:
-            results_plot = r.plot()
+        results_plot = next(r.plot() for r in results)
 
         cv2.imshow("webcam predicted", results_plot)
         key = cv2.waitKey(1) & 0xFF
