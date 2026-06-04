@@ -7,7 +7,7 @@ import numpy as np
 def main():
     F_length = 100.0
     real_width = 10.0
-    model = YOLO("best_seg.pt")
+    model = YOLO("best_seg.onnx")
     cap= cv2.VideoCapture(1,cv2.CAP_DSHOW)
     cap.set(cv2.CAP_PROP_FPS,30)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH,1280)

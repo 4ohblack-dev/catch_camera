@@ -8,7 +8,7 @@ import time
 
 def main():
     base_dir = Path(__file__).resolve().parent
-    model_path = base_dir/"best.pt"
+    model_path = base_dir/"best.onnx"
     model = YOLO(str(model_path))
 
     cap = cv2.VideoCapture(1,cv2.CAP_DSHOW)
