@@ -35,7 +35,7 @@ def main():
                         (w,h)=rect[1]
                         pixel_width = max(w,h)
                         newdistance = None
-                        alpha = 0.08
+                        alpha = 0.05
 
                         if pixel_width>0:
                             predistance = F_length*real_width/pixel_width
