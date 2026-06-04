@@ -29,16 +29,26 @@ def main():
                     
                     contours, _ = cv2.findContours(mask_data,cv2.RETR_EXTERNAL,  cv2.CHAIN_APPROX_SIMPLE)
                     if contours:
-                         largest_contour= max(contours,key=cv2.contourArea)
-                         rect = cv2.minAreaRect(largest_contour)
-                         (w,h)=rect[1]
-                         pixel_width = max(w,h)
+                        largest_contour= max(contours,key=cv2.contourArea)
+                        hull = cv2.convexHull(largest_contour)
+                        rect = cv2.minAreaRect(hull)
+                        (w,h)=rect[1]
+                        pixel_width = max(w,h)
+                        newdistance = None
+                        alpha = 0.08
 
-                         if pixel_width>0:
-                            distance = F_length*real_width/pixel_width
+                        if pixel_width>0:
+                            predistance = F_length*real_width/pixel_width
+
+                            if newdistance is None:
+                                newdistance=predistance
+                            else:
+                                newdistance=(1-alpha)*newdistance + alpha*predistance
+
+                            
                             cv2.drawContours(frame, [largest_contour], -1, (0, 255, 0), 2)
                             x1, y1, x2, y2 = map(int, box.xyxy[0])
-                            text = f"Dist: {distance:.1f} cm"
+                            text = f"Dist: {newdistance:.1f} cm"
                             cv2.putText(frame, text, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 
                             0.6, (0, 0, 255), 2)
             
