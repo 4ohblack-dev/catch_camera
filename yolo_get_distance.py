@@ -71,8 +71,8 @@ def main():
                         (centerX,centerY) = rect[0]
                         angle = rect[2]
                         (w,h) = rect[1]
-                        #deltaX,deltaY = centerX-CENTER_X,centerY-CENTER_Y
-                        deltaX,deltaY = 10.0,10.0
+                        deltaX,deltaY = centerX-CENTER_X,centerY-CENTER_Y
+                        #deltaX,deltaY = 10.0,10.0
                         pixel_width = max(w,h)
 
                         if pixel_width>0:
