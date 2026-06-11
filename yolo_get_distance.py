@@ -12,7 +12,12 @@ HEADER = b'\xAA'
 DATA_FORMAT = '<ff'
 DATA_SIZE = struct.calcsize(DATA_FORMAT)
 PACKET_SIZE = len(HEADER) + DATA_SIZE + 1
-
+F_LENGTH = 100.0
+REAL_WIDTH = 10.0
+SCREEN_WIDTH=1280.0
+SCREEN_HEIGHT = 720.0
+CENTER_X = 640.0
+CENTER_Y = 360.0
 
 def calculateCRC(data: bytes) -> int:  # 引数はbytes型、戻り値はintで、1バイトの整数を返す
     crc = 0x00
@@ -27,13 +32,15 @@ def calculateCRC(data: bytes) -> int:  # 引数はbytes型、戻り値はintで�
 
 
 def main():
-    F_length = 100.0
-    real_width = 10.0
     model = YOLO("best_seg.onnx",task="segment")
     cap= cv2.VideoCapture(1,cv2.CAP_DSHOW)
     cap.set(cv2.CAP_PROP_FPS,30)
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH,1280)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT,720)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH,SCREEN_WIDTH)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT,SCREEN_HEIGHT)
+    ser = serial.Serial(SERIAL_PORT, BAUDRATE, timeout=0.5)
+    time.sleep(2)
+    newdistance = None
+    alpha = 0.05
 
     while cap.isOpened():
         ret, frame = cap.read()
@@ -56,18 +63,27 @@ def main():
                         largest_contour= max(contours,key=cv2.contourArea)
                         hull = cv2.convexHull(largest_contour)
                         rect = cv2.minAreaRect(hull)
-                        (w,h)=rect[1]
+                        (centerX,centerY) = rect[0]
+                        angle = rect[2]
+                        (w,h) = rect[1]
+                        #deltaX,deltaY = centerX-CENTER_X,centerY-CENTER_Y
+                        deltaX,deltaY = 10.0,10.0
                         pixel_width = max(w,h)
-                        newdistance = None
-                        alpha = 0.05
 
                         if pixel_width>0:
-                            predistance = F_length*real_width/pixel_width
+                            predistance = F_LENGTH*REAL_WIDTH/pixel_width
 
                             if newdistance is None:
                                 newdistance=predistance
                             else:
                                 newdistance=(1-alpha)*newdistance + alpha*predistance
+
+
+                            data_bytes = struct.pack(DATA_FORMAT,float(deltaX),float(deltaY))
+                            crc = calculateCRC(data_bytes)
+                            packet = HEADER + data_bytes + bytes([crc])
+                            ser.write(packet)
+                            ser.flush()
 
                             
                             cv2.drawContours(frame, [largest_contour], -1, (0, 255, 0), 2)
