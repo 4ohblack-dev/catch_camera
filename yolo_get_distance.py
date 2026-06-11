@@ -6,7 +6,7 @@ import struct
 import time
 
 SERIAL_PORT = "COM3"
-BAUDRATE = 115200
+BAUDRATE = 1152000
 
 HEADER = b'\xAA'
 DATA_FORMAT = '<ff'
@@ -37,7 +37,7 @@ def main():
     cap.set(cv2.CAP_PROP_FPS,30)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH,SCREEN_WIDTH)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT,SCREEN_HEIGHT)
-    ser = serial.Serial(SERIAL_PORT, BAUDRATE, timeout=0.5)
+    ser = serial.Serial(SERIAL_PORT, BAUDRATE, timeout=0.0)
     time.sleep(2)
     newdistance = None
     alpha = 0.05
@@ -91,6 +91,38 @@ def main():
                             text = f"Dist: {newdistance:.1f} cm"
                             cv2.putText(frame, text, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 
                             0.6, (0, 0, 255), 2)
+
+                            # --- 受信デバッグ用書き換え ---
+                            head = ser.read(1)
+
+                            if len(head) == 0:
+                                # タイムアウトして1バイトも届かなかった場合
+                                print("Waiting... (No data received from ESP32)")
+                            elif head == HEADER:
+                                print("-> Header [0xAA] OK!") # ヘッダーを見つけたログ
+
+                                rx_bytes = ser.read(DATA_SIZE + 1)
+                                print(f"-> Read remaining bytes: {len(rx_bytes)}/9 bytes") # バイト数ログ
+
+                                if len(rx_bytes) == (DATA_SIZE + 1):
+                                    rx_data_bytes = rx_bytes[:DATA_SIZE]
+                                    rx_crc = rx_bytes[DATA_SIZE]
+
+                                    calc = calculateCRC(rx_data_bytes)
+                                    print(f"-> CRC Check: Recv={rx_crc}, Calc={calc}") # CRCの一致ログ
+
+                                    if calc == rx_crc:
+                                        unpacked = struct.unpack(DATA_FORMAT, rx_data_bytes)
+                                        print(f"✨ Success! -> dx: {unpacked[0]:.2f}, dy: {unpacked[1]:.2f}")
+                                    else:
+                                        print("❌ CRC Mismatch Error!")
+                                else:
+                                    print("❌ Packet fraction lost!")
+                            else:
+                                # ヘッダーではない別のゴミデータが届いた場合
+                                print(f"-> Unknown byte received: {head.hex()}")
+                                if ser.in_waiting > 0:
+                                    ser.reset_input_buffer()
             
             cv2.imshow("Focal Length Calibrator (1280x720)", frame)
             if cv2.waitKey(1) & 0xFF == ord("q"):
