@@ -1,6 +1,30 @@
 import cv2 
 from ultralytics import YOLO
 import numpy as np
+import serial
+import struct
+import time
+
+SERIAL_PORT = "COM3"
+BAUDRATE = 115200
+
+HEADER = b'\xAA'
+DATA_FORMAT = '<ff'
+DATA_SIZE = struct.calcsize(DATA_FORMAT)
+PACKET_SIZE = len(HEADER) + DATA_SIZE + 1
+
+
+def calculateCRC(data: bytes) -> int:  # 引数はbytes型、戻り値はintで、1バイトの整数を返す
+    crc = 0x00
+    for byte in data:
+        crc ^= byte
+        for _ in range(8):
+            if crc & 0x80:
+                crc = ((crc << 1) ^ 0x07) & 0xFF
+            else:
+                crc = (crc << 1) & 0xFF
+    return crc
+
 
 def main():
     F_length = 100.0
