@@ -10,7 +10,7 @@ SERIAL_PORT = "COM3"
 BAUDRATE = 1152000
 
 HEADER = b'\xAA'
-DATA_FORMAT = '<ff'
+DATA_FORMAT = '<fff'
 DATA_SIZE = struct.calcsize(DATA_FORMAT)
 PACKET_SIZE = len(HEADER) + DATA_SIZE + 1
 F_LENGTH = 100.0
@@ -42,7 +42,7 @@ def main():
     cap.set(cv2.CAP_PROP_FPS,30)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH,SCREEN_WIDTH)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT,SCREEN_HEIGHT)
-    ser = serial.Serial(SERIAL_PORT, BAUDRATE, timeout=0.0)
+    ser = serial.Serial(SERIAL_PORT, BAUDRATE, timeout=0.01)
     time.sleep(2)
     newdistance = None
     alpha = 0.05
@@ -57,7 +57,7 @@ def main():
             masks=r.masks
             boxes=r.boxes
 
-            if hasattr(r, 'masks') and masks is not None and hasattr(r, 'boxes') and boxes is not None:
+            if r.masks is not None and r.boxes is not None:
                 masks_data = masks.data.cpu().numpy()
                 for box,mask in zip(boxes,masks_data):
                     
@@ -71,8 +71,9 @@ def main():
                         (centerX,centerY) = rect[0]
                         angle = rect[2]
                         (w,h) = rect[1]
+                        angle += 90 if w<h else 0
+                        angle = angle % 180
                         deltaX,deltaY = centerX-CENTER_X,centerY-CENTER_Y
-                        #deltaX,deltaY = 10.0,10.0
                         pixel_width = max(w,h)
 
                         if pixel_width>0:
@@ -84,11 +85,10 @@ def main():
                                 newdistance=(1-alpha)*newdistance + alpha*predistance
 
 
-                            data_bytes = struct.pack(DATA_FORMAT,float(deltaX),float(deltaY))
+                            data_bytes = struct.pack(DATA_FORMAT,float(deltaX),float(deltaY),float(angle))
                             crc = calculateCRC(data_bytes)
                             packet = HEADER + data_bytes + bytes([crc])
                             ser.write(packet)
-                            ser.flush()
 
                             
                             cv2.drawContours(frame, [largest_contour], -1, (0, 255, 0), 2)
@@ -109,7 +109,7 @@ def main():
 
                                 rx_bytes = ser.read(DATA_SIZE + 1)
                                 log_with_time(
-                                    f"-> Read remaining bytes: {len(rx_bytes)}/9 bytes"
+                                    f"-> Read remaining bytes: {len(rx_bytes)}/{DATA_SIZE+1} bytes"
                                 )
 
                                 if len(rx_bytes) == (DATA_SIZE + 1):
