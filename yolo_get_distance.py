@@ -113,8 +113,8 @@ def main():
                                 )
 
                                 if len(rx_bytes) == (DATA_SIZE + 1):
-                                    rx_data_bytes = rx_bytes[:DATA_SIZE]
-                                    rx_crc = rx_bytes[DATA_SIZE]
+                                    rx_data_bytes = rx_bytes[:DATA_SIZE]#先頭からDATASIZEだけ取り出す
+                                    rx_crc = rx_bytes[DATA_SIZE]#最後の1byteだけを取り出す
 
                                     calc = calculateCRC(rx_data_bytes)
                                     log_with_time(
