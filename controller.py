@@ -4,10 +4,12 @@ import serial
 import struct
 
 SERIAL_PORT = "/dev/ttyUSB0"
-BAUDRATE = 1152000
+BAUDRATE = 115200
 
 HEADER = b'\xAA'
-DATA_FORMAT = '<fff'
+NUM_FLOATS = 6
+NUM_BUTTONS = 6
+DATA_FORMAT = f'<{NUM_FLOATS}f{NUM_BUTTONS}B'
 DATA_SIZE = struct.calcsize(DATA_FORMAT)
 PACKET_SIZE = len(HEADER) + DATA_SIZE + 1
 
@@ -46,8 +48,7 @@ def main():
     print("Axes:",joy.get_numaxes())
 
     while True:
-        for event in pygame.event.get():
-            print(event)
+        pygame.event.pump()
 
         leftX = deadzone(joy.get_axis(0))
         leftY = deadzone(joy.get_axis(1))
@@ -56,12 +57,26 @@ def main():
         rightX = deadzone(joy.get_axis(3))
         rightY = deadzone(joy.get_axis(4))
         rotR = deadzone(joy.get_axis(5))
+        
+        L_button = 1 if joy.get_button(4) else 0
+        R_button = 1 if joy.get_button(5) else 0
 
-        #print(leftX)
-        #print(leftY)
-        #print(rotL)
+        button_cro = 1 if joy.get_button(0) else 0
+        button_cir = 1 if joy.get_button(1) else 0
+        button_tri = 1 if joy.get_button(2) else 0
+        button_rec = 1 if joy.get_button(3) else 0
 
-        data_bytes = struct.pack(DATA_FORMAT,float(leftX),float(leftY),float(rotL))
+        #button_left = 1 if joy.get_button(0) else 0
+        #button_right = 1 if joy.get_button(0) else 0
+        #button_up = 1 if joy.get_button(0) else 0
+        #button_down = 1 if joy.get_button(0) else 0
+
+        values = [leftX,leftY,rotL,rightX,rightY,rotR,#joystick,rot
+                  L_button,R_button,#LRボタン
+                  button_cro,button_cir,button_tri,button_rec#下から反時計回り
+                  ]
+
+        data_bytes = struct.pack(DATA_FORMAT,*values)
         crc = calculateCRC(data_bytes)
         packet = HEADER + data_bytes + bytes([crc])
         ser.write(packet)
