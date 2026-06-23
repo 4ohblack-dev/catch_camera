@@ -38,14 +38,15 @@ def calculateCRC(data: bytes) -> int:  # 引数はbytes型、戻り値はintで�
 
 def main():
     model = YOLO("best_seg_openvino_model",task="segment")
-    cap= cv2.VideoCapture(1,cv2.CAP_DSHOW)
+    cap= cv2.VideoCapture(0,cv2.CAP_DSHOW)
     cap.set(cv2.CAP_PROP_FPS,30)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH,SCREEN_WIDTH)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT,SCREEN_HEIGHT)
-    ser = serial.Serial(SERIAL_PORT, BAUDRATE, timeout=0.01)
+    #ser = serial.Serial(SERIAL_PORT, BAUDRATE, timeout=0.01)
     time.sleep(2)
     newdistance = None
     alpha = 0.05
+    State = False
 
     while cap.isOpened():
         ret, frame = cap.read()
@@ -76,6 +77,10 @@ def main():
                         deltaX,deltaY = centerX-CENTER_X,centerY-CENTER_Y
                         pixel_width = max(w,h)
 
+                        State = True if (deltaX*deltaX + deltaY*deltaY)< 50*50 else False
+
+                        print("〇") if State == True else print("✕")
+                        
                         if pixel_width>0:
                             predistance = F_LENGTH*REAL_WIDTH/pixel_width
 
@@ -83,63 +88,64 @@ def main():
                                 newdistance=predistance
                             else:
                                 newdistance=(1-alpha)*newdistance + alpha*predistance
-
-
-                            data_bytes = struct.pack(DATA_FORMAT,float(deltaX),float(deltaY),float(angle))
-                            crc = calculateCRC(data_bytes)
-                            packet = HEADER + data_bytes + bytes([crc])
-                            ser.write(packet)
-
-                            
+#
+#
+#                            data_bytes = struct.pack(DATA_FORMAT,float(deltaX),float(deltaY),float(angle))
+#                            crc = calculateCRC(data_bytes)
+#                            packet = HEADER + data_bytes + bytes([crc])
+#                            ser.write(packet)
+#
+#                            
                             cv2.drawContours(frame, [largest_contour], -1, (0, 255, 0), 2)
                             x1, y1, x2, y2 = map(int, box.xyxy[0])
                             text = f"Dist: {newdistance:.1f} cm"
                             cv2.putText(frame, text, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 
                             0.6, (0, 0, 255), 2)
-
-                            # --- 受信デバッグ用（タイムスタンプ付き） ---
-                            head = ser.read(1)
-
-                            if len(head) == 0:
-                                log_with_time(
-                                    "Waiting... (No data received from ESP32)"
-                                )
-                            elif head == HEADER:
-                                log_with_time("-> Header [0xAA] OK!")
-
-                                rx_bytes = ser.read(DATA_SIZE + 1)
-                                log_with_time(
-                                    f"-> Read remaining bytes: {len(rx_bytes)}/{DATA_SIZE+1} bytes"
-                                )
-
-                                if len(rx_bytes) == (DATA_SIZE + 1):
-                                    rx_data_bytes = rx_bytes[:DATA_SIZE]#先頭からDATASIZEだけ取り出す
-                                    rx_crc = rx_bytes[DATA_SIZE]#最後の1byteだけを取り出す
-
-                                    calc = calculateCRC(rx_data_bytes)
-                                    log_with_time(
-                                        f"-> CRC Check: Recv={rx_crc}, Calc={calc}"
-                                    )
-
-                                    if calc == rx_crc:
-                                        unpacked = struct.unpack(
-                                            DATA_FORMAT, rx_data_bytes
-                                        )
-                                        log_with_time(
-                                            f"✨ Success! -> dx: {unpacked[0]:.2f}, dy: {unpacked[1]:.2f}"
-                                        )
-                                    else:
-                                        log_with_time("❌ CRC Mismatch Error!")
-                                else:
-                                    log_with_time("❌ Packet fraction lost!")
-                            else:
-                                log_with_time(
-                                    f"-> Unknown byte received: {head.hex()}"
-                                )
-                                if ser.in_waiting > 0:
-                                    ser.reset_input_buffer()
-            
+#
+#                            # --- 受信デバッグ用（タイムスタンプ付き） ---
+#                            head = ser.read(1)
+#
+#                            if len(head) == 0:
+#                                log_with_time(
+#                                    "Waiting... (No data received from ESP32)"
+#                                )
+#                            elif head == HEADER:
+#                                log_with_time("-> Header [0xAA] OK!")
+#
+#                                rx_bytes = ser.read(DATA_SIZE + 1)
+#                                log_with_time(
+#                                    f"-> Read remaining bytes: {len(rx_bytes)}/{DATA_SIZE+1} bytes"
+#                                )
+#
+#                                if len(rx_bytes) == (DATA_SIZE + 1):
+#                                    rx_data_bytes = rx_bytes[:DATA_SIZE]#先頭からDATASIZEだけ取り出す
+#                                    rx_crc = rx_bytes[DATA_SIZE]#最後の1byteだけを取り出す
+#
+#                                    calc = calculateCRC(rx_data_bytes)
+#                                    log_with_time(
+#                                        f"-> CRC Check: Recv={rx_crc}, Calc={calc}"
+#                                    )
+#
+#                                    if calc == rx_crc:
+#                                        unpacked = struct.unpack(
+#                                            DATA_FORMAT, rx_data_bytes
+#                                        )
+#                                        log_with_time(
+#                                            f"✨ Success! -> dx: {unpacked[0]:.2f}, dy: {unpacked[1]:.2f}"
+#                                        )
+#                                    else:
+#                                        log_with_time("❌ CRC Mismatch Error!")
+#                                else:
+#                                    log_with_time("❌ Packet fraction lost!")
+#                            else:
+#                                log_with_time(
+#                                    f"-> Unknown byte received: {head.hex()}"
+#                                )
+#                                if ser.in_waiting > 0:
+#                                    ser.reset_input_buffer()
+#            
             cv2.imshow("Focal Length Calibrator (1280x720)", frame)
+
             if cv2.waitKey(1) & 0xFF == ord("q"):
                 break
     
