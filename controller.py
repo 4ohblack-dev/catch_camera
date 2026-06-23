@@ -7,9 +7,11 @@ SERIAL_PORT = "/dev/ttyUSB0"
 BAUDRATE = 115200
 
 HEADER = b'\xAA'
+NUM_CAMERA_STATES = 3
+NUM_CAMERA_STATE = 1
 NUM_FLOATS = 6
 NUM_BUTTONS = 6
-DATA_FORMAT = f'<{NUM_FLOATS}f{NUM_BUTTONS}B'
+DATA_FORMAT = f'<{NUM_CAMERA_STATES}f{NUM_CAMERA_STATE}B{NUM_FLOATS}f{NUM_BUTTONS}B'
 DATA_SIZE = struct.calcsize(DATA_FORMAT)
 PACKET_SIZE = len(HEADER) + DATA_SIZE + 1
 
@@ -46,9 +48,11 @@ def main():
     print("Name:",joy.get_name())
     print("Buttons:",joy.get_numbuttons())
     print("Axes:",joy.get_numaxes())
+    deltaX,deltaY,angle=0.0,0.0,0.0
 
     while True:
         pygame.event.pump()
+
 
         leftX = deadzone(joy.get_axis(0))
         leftY = deadzone(joy.get_axis(1))

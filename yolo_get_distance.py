@@ -94,8 +94,7 @@ def main():
 #                            crc = calculateCRC(data_bytes)
 #                            packet = HEADER + data_bytes + bytes([crc])
 #                            ser.write(packet)
-#
-#                            
+        
                             cv2.drawContours(frame, [largest_contour], -1, (0, 255, 0), 2)
                             x1, y1, x2, y2 = map(int, box.xyxy[0])
                             text = f"Dist: {newdistance:.1f} cm"
