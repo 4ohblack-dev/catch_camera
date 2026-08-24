@@ -48,36 +48,37 @@ def main():
     print("Name:",joy.get_name())
     print("Buttons:",joy.get_numbuttons())
     print("Axes:",joy.get_numaxes())
-    deltaX,deltaY,angle=0.0,0.0,0.0
+    deltaX,deltaY,angle=0.0
+    state = 0
 
     while True:
         pygame.event.pump()
 
-
         leftX = deadzone(joy.get_axis(0))
         leftY = deadzone(joy.get_axis(1))
-        rotL = deadzone(joy.get_axis(2))
+        #rotL = deadzone(joy.get_axis(2))
 
         rightX = deadzone(joy.get_axis(3))
         rightY = deadzone(joy.get_axis(4))
-        rotR = deadzone(joy.get_axis(5))
+        #rotR = deadzone(joy.get_axis(5))
         
         L_button = 1 if joy.get_button(4) else 0
         R_button = 1 if joy.get_button(5) else 0
 
-        button_cro = 1 if joy.get_button(0) else 0
-        button_cir = 1 if joy.get_button(1) else 0
-        button_tri = 1 if joy.get_button(2) else 0
-        button_rec = 1 if joy.get_button(3) else 0
+        #button_cro = 1 if joy.get_button(0) else 0
+        #button_cir = 1 if joy.get_button(1) else 0
+        #button_tri = 1 if joy.get_button(2) else 0
+        #button_rec = 1 if joy.get_button(3) else 0
 
-        #button_left = 1 if joy.get_button(0) else 0
-        #button_right = 1 if joy.get_button(0) else 0
-        #button_up = 1 if joy.get_button(0) else 0
-        #button_down = 1 if joy.get_button(0) else 0
+        button_left = 1 if joy.get_button(0) else 0
+        button_right = 1 if joy.get_button(0) else 0
+        button_up = 1 if joy.get_button(0) else 0
+        button_down = 1 if joy.get_button(0) else 0
 
-        values = [leftX,leftY,rotL,rightX,rightY,rotR,#joystick,rot
+        values = [leftX,leftY,rightX,rightY,#joystick
                   L_button,R_button,#LRボタン
-                  button_cro,button_cir,button_tri,button_rec#下から反時計回り
+                  button_left,button_right,button_up,button_down,#下から反時計回り
+                  deltaX,deltaY,angle,state#カメラ情報
                   ]
 
         data_bytes = struct.pack(DATA_FORMAT,*values)

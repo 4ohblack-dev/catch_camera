@@ -10,7 +10,7 @@ SERIAL_PORT = "COM3"
 BAUDRATE = 1152000
 
 HEADER = b'\xAA'
-DATA_FORMAT = '<fff'
+DATA_FORMAT = '<4f6b3fb'
 DATA_SIZE = struct.calcsize(DATA_FORMAT)
 PACKET_SIZE = len(HEADER) + DATA_SIZE + 1
 F_LENGTH = 100.0
@@ -77,7 +77,7 @@ def main():
                         deltaX,deltaY = centerX-CENTER_X,centerY-CENTER_Y
                         pixel_width = max(w,h)
 
-                        State = True if (deltaX*deltaX + deltaY*deltaY)< 50*50 else False
+                        State = True if (deltaX*deltaX + deltaY*deltaY)< 100*100 else False
 
                         print("〇") if State == True else print("✕")
                         
