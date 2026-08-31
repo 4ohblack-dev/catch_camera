@@ -3,7 +3,7 @@ import time
 import serial
 import struct
 
-SERIAL_PORT = "/dev/ttyUSB0"
+SERIAL_PORT = "COM5"
 BAUDRATE = 115200
 
 HEADER = b'\xAA'
@@ -48,7 +48,7 @@ def main():
     print("Name:",joy.get_name())
     print("Buttons:",joy.get_numbuttons())
     print("Axes:",joy.get_numaxes())
-    deltaX,deltaY,angle=0.0
+    deltaX=deltaY=angle=0.0
     state = 0
 
     while True:
@@ -109,7 +109,7 @@ def main():
 #左     横：axes 0、縦：axes 1、ボタン：axes 2、L：button 4
 #右     横：axes 3、縦：axes 4、ボタン：axes 5、R：button 5
 #右十字 下から反時計回りに　button 0~3
-#左十字 返り値が(,)で、正の方向が１、負の方向が‐1
+#左十字 返り値が(,)で、正の方向が１、負の方向が‐1(上下左右　→　11,12,13,14)
 #share : button 8
 # options : button 9
 
