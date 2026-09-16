@@ -77,9 +77,9 @@ def main():
                         deltaX,deltaY = centerX-CENTER_X,centerY-CENTER_Y
                         pixel_width = max(w,h)
 
-                        State = True if (deltaX*deltaX + deltaY*deltaY)< 100*100 else False
+                        State = True if (deltaX*deltaX + deltaY*deltaY)< 120*120 else False
 
-                        print("〇") if State == True else print("✕")
+                        print(f"〇:({angle:.2f}deg)") if State == True else print("✕")
                         
                         if pixel_width>0:
                             predistance = F_LENGTH*REAL_WIDTH/pixel_width
